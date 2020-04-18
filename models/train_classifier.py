@@ -20,19 +20,44 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.metrics import classification_report
 
 def load_data(database_filepath):
+    """Loads from a database file, cleans dataset
+    and returns X/Y arrays and label names.
+
+    Arguments:
+    database_filepath -- path of database
+
+    Returns:
+    X -- array of messages
+    Y -- array of categories
+    category_names -- list of category names
+    """
+
+    # load data
     engine = create_engine('sqlite:///' + database_filepath)
     df = pd.read_sql_table('messages_categorized', engine)
 
+    # clean data
+    ## drop column with missing data
     df.dropna(axis=1, inplace=True)
-    df_labels = df.iloc[:, 3:].columns
-    df_clean = df[~(df[df_labels]>1).any(axis=1)].copy()
+    category_names = df.iloc[:, 3:].columns
+    ## drop rows where category dummy > 1
+    df_clean = df[~(df[category_names]>1).any(axis=1)].copy()
 
     X = df_clean['message'].values
     Y = df_clean.iloc[:,3:].values
 
-    return X, Y, df_labels
+    return X, Y, category_names
 
 def tokenize(text):
+    """Returns list of word tokens from clean_text
+
+    Arguments:
+    text -- string of text
+
+    Returns:
+    clean_tokens -- list of word tokens    
+    """
+
     clean_text = re.sub('[^A-Za-z]+', ' ', text)
 
     tokens = word_tokenize(clean_text)
@@ -77,6 +102,8 @@ def main():
 
         print('Building model...')
         model = build_model()
+
+        # set grid searched model parameters
         model.set_params(clf__estimator__min_samples_split = 2,
                          clf__estimator__n_jobs = -1,
                          clf__estimator__verbose = 10,
