@@ -36,15 +36,9 @@ def load_data(database_filepath):
     engine = create_engine('sqlite:///' + database_filepath)
     df = pd.read_sql_table('messages_categorized', engine)
 
-    # clean data
-    ## drop column with missing data
-    df.dropna(axis=1, inplace=True)
     category_names = df.iloc[:, 3:].columns
-    ## drop rows where category dummy > 1
-    df_clean = df[~(df[category_names]>1).any(axis=1)].copy()
-
-    X = df_clean['message'].values
-    Y = df_clean.iloc[:,3:].values
+    X = df['message'].values
+    Y = df.iloc[:,3:].values
 
     return X, Y, category_names
 
@@ -55,7 +49,7 @@ def tokenize(text):
     text -- string of text
 
     Returns:
-    clean_tokens -- list of word tokens    
+    clean_tokens -- list of word tokens
     """
 
     clean_text = re.sub('[^A-Za-z]+', ' ', text)
@@ -81,6 +75,22 @@ def build_model():
         ('tfidf', TfidfTransformer()),
         ('clf', MultiOutputClassifier(RandomForestClassifier()))]
     )
+
+    # block-commented grid earch section to shorten execution time
+    # grid searched parameters are set before model training
+
+    # parameters = {'vect__ngram_range': ((1, 1), (1, 2)),
+    #             'vect__max_df': (0.5, 0.75, 1.0),
+    #             #'vect__max_features': (None, 5000, 10000),
+    #             'tfidf__use_idf': (True, False),
+    #             #'clf__estimator__n_estimators': [50, 100, 200],
+    #             #'clf__estimator__max_features': ['auto', 'sqrt'],
+    #             'clf__estimator__min_samples_split': [2, 5, 10],
+    #             #'clf__estimator__bootstrap': [True, False],
+    #         }
+    #
+    # cv = GridSearchCV(pipeline, param_grid=parameters)
+    #
     return pipeline
 
 def evaluate_model(model, X_test, Y_test, category_names):

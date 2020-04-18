@@ -30,9 +30,16 @@ def clean_data(df):
     df.drop('categories', axis=1, inplace=True)
     df = pd.concat([df,categories],axis=1)
 
-    df.drop_duplicates(inplace=True)
+    # drop column with missing data
+    df.dropna(axis=1, inplace=True)
 
-    return df
+    # drop rows where category dummy > 1
+    category_names = df.iloc[:, 3:].columns
+    df_clean = df[~(df[category_names]>1).any(axis=1)].copy()
+
+    df_clean.drop_duplicates(inplace=True)
+
+    return df_clean
 
 def save_data(df, database_filename):
     engine = create_engine('sqlite:///' + database_filename)
