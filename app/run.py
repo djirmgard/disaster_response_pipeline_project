@@ -5,8 +5,7 @@ import pandas as pd
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 
-from flask import Flask
-from flask import render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify
 from plotly.graph_objs import Bar
 from sklearn.externals import joblib
 from sqlalchemy import create_engine
@@ -39,12 +38,18 @@ model = joblib.load("models/classifier.pkl")
 def index():
 
     # extract data needed for visuals
-    # TODO: Below is an example - modify to extract data for your own visuals
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
 
+    df_melted = df.melt(id_vars=df.columns[:3],value_vars=df.columns[3:],var_name='category',value_name='category_value')
+    category_groups = df_melted.groupby('category').mean()['category_value'].sort_values(ascending=False).head(5)
+    top_category_names = category_groups.index
+    top_category_shares = category_groups.values
+
+    df['message_len'] = df['message'].str.len()
+    message_len = df.groupby('genre').agg('mean')['message_len']
+
     # create visuals
-    # TODO: Below is an example - modify to create your own visuals
     graphs = [
         {
             'data': [
@@ -61,6 +66,44 @@ def index():
                 },
                 'xaxis': {
                     'title': "Genre"
+                }
+            }
+        },
+        {
+            'data': [
+                Bar(
+                    x=genre_names,
+                    y=message_len
+                )
+            ],
+
+            'layout': {
+                'title': 'Average Message Length by Genre',
+                'yaxis': {
+                    'title': "Message Length"
+                },
+                'xaxis': {
+                    'title': "Genre"
+                }
+            }
+        },
+        {
+            'data': [
+                Bar(
+                    y=top_category_names,
+                    x=top_category_shares,
+                    orientation='h'
+                )
+            ],
+
+            'layout': {
+                'title': 'Top 5 Categories by Share of all Messages',
+                'yaxis': {
+                    'title': "category"
+                },
+                'xaxis': {
+                    'title': "share of messages",
+                    'tickformat': ',.0%'
                 }
             }
         }
@@ -82,7 +125,7 @@ def go():
 
     # use model to predict classification for query
     classification_labels = model.predict([query])[0]
-    classification_results = dict(zip(df.columns[4:], classification_labels))
+    classification_results = dict(zip(df.columns[3:], classification_labels))
 
     # This will render the go.html Please see that file.
     return render_template(
