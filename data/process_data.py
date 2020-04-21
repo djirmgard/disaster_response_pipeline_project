@@ -4,6 +4,16 @@ import numpy as np
 from sqlalchemy import create_engine
 
 def load_data(messages_filepath, categories_filepath):
+    """Loads and merges messages and categories dataframes.
+
+    Arguments:
+    messages_filepath -- path of messages dataframe
+    categories_filepath -- path of categories dataframe
+
+    Returns:
+    DataFrame object
+    """
+
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
     df = pd.merge(messages, categories, on='id', how='inner')
@@ -11,6 +21,15 @@ def load_data(messages_filepath, categories_filepath):
     return df
 
 def clean_data(df):
+    """Cleans merged dataframe.
+
+    Arguments:
+    df -- dataframe to clean
+
+    Returns:
+    DataFrame object
+    """
+
     categories = df['categories'].str.split(';', expand=True)
 
     # create a dataframe of the 36 individual category columns
@@ -42,6 +61,13 @@ def clean_data(df):
     return df_clean
 
 def save_data(df, database_filename):
+    """Stores a DataFrame object as a SQLite file.
+
+    Arguments:
+    df -- dataframe to clean
+    database_filename -- path of SQLite file
+    """
+
     engine = create_engine('sqlite:///' + database_filename)
     df.to_sql('messages_categorized', engine, index=False)
 

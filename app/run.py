@@ -10,10 +10,19 @@ from plotly.graph_objs import Bar
 from sklearn.externals import joblib
 from sqlalchemy import create_engine
 
-
+# instantiate Flask object
 app = Flask(__name__)
 
 def tokenize(text):
+    """Converts text to a list of word tokens.
+
+    Arguments:
+    text --  string of text
+
+    Returns:
+    List of word tokens
+    """
+
     tokens = word_tokenize(text)
     lemmatizer = WordNetLemmatizer()
 
@@ -30,7 +39,6 @@ df = pd.read_sql_table('messages_categorized', engine)
 
 # load model
 model = joblib.load("models/classifier.pkl")
-
 
 # index webpage displays cool visuals and receives user input text for model
 @app.route('/')

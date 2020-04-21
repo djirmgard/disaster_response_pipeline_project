@@ -69,6 +69,12 @@ def tokenize(text):
 
 
 def build_model():
+    """Builds a pipeline model by creating NLP features and instantiating
+    Random Forest Classifier. Optional: Gridsearch to optimize hyperparameters.
+
+    Returns:
+    model pipeline object
+    """
 
     pipeline = Pipeline([
         ('vect', CountVectorizer(tokenizer=tokenize)),
@@ -94,16 +100,29 @@ def build_model():
     return pipeline
 
 def evaluate_model(model, X_test, Y_test, category_names):
+    """Returns classification reports for every category for a trained model.
+
+    Arguments:
+    model -- fitted model object
+    X_test -- array of messages to categorize
+    Y_test -- array of observed categories
+    category_names -- list of category names
+
+    """
+
     Y_pred = model.predict(X_test)
 
     for i in range(len(category_names)):
         print( "Label: {}".format(category_names[i]), "\n", classification_report( Y_test[:,i], Y_pred[:,i] ) )
 
 def save_model(model, model_filepath):
+        """Saves fitted model as pickle file."""
+
     pickle.dump(model, open(model_filepath, 'wb'))
 
 
 def main():
+
     if len(sys.argv) == 3:
         database_filepath, model_filepath = sys.argv[1:]
         print('Loading data...\n    DATABASE: {}'.format(database_filepath))
